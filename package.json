@@ -31,8 +31,5 @@
   "homepage": "https://github.com/aras-p/glsl-optimizer",
   "directories": {
     "test": "tests"
-  },
-  "dependencies": {
-    "nan": "~1.2.0"
   }
 }

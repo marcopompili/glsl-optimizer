@@ -36,52 +36,54 @@ void Compiler::release()
 
 void Compiler::Init(Handle<Object> exports)
 {
-	NanScope();
+	Isolate *isolate = exports->GetIsolate();
 
 	// Prepare constructor template
-	Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
-	
-	tpl->SetClassName(NanNew<String>("Compiler"));
+	Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
+	tpl->SetClassName(String::NewFromUtf8(isolate, "Compiler"));
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
 	// Prototype
-	NanSetPrototypeTemplate(tpl, "dispose", NanNew<FunctionTemplate>(Dispose));
+	NODE_SET_PROTOTYPE_METHOD(tpl, "dispose", Dispose);
 
 	// Export the class
-	NanAssignPersistent<Function>(constructor, tpl->GetFunction());
-	exports->Set(NanNew<String>("Compiler"), tpl->GetFunction());
+	constructor.Reset(isolate, tpl->GetFunction());
+	exports->Set(String::NewFromUtf8(isolate, "Compiler"), tpl->GetFunction());
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Compiler::New)
+void Compiler::New(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
+	Isolate* isolate = args.GetIsolate();
 
-	if (args.IsConstructCall()) {
+	if (args.IsConstructCall())
+	{
 		glslopt_target target = kGlslTargetOpenGL;
-		if (args[0]->IsInt32()) 
+
+		if (args[0]->IsInt32())
 			target = (glslopt_target)args[0]->Int32Value();
+
 		else if (args[0]->IsBoolean())
 			target = (glslopt_target)( (int)args[0]->BooleanValue() );
 
 		Compiler* obj = new Compiler(target);
 		obj->Wrap(args.This());
-		NanReturnValue(args.This());
+    args.GetReturnValue().Set(args.This());
 	} else {
-		Local<Function> cons = NanNew<Function>(constructor);
-		NanReturnValue(cons->NewInstance());
+		const int argc = 1;
+    Local<Value> argv[argc] = { args[0] };
+    Local<Function> cons = Local<Function>::New(isolate, constructor);
+    args.GetReturnValue().Set(cons->NewInstance(argc, argv));
 	}
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Compiler::Dispose)
+void Compiler::Dispose(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
-
 	Compiler* obj = ObjectWrap::Unwrap<Compiler>(args.This());
 	obj->release();
 
-	NanReturnUndefined();
+	args.GetReturnValue().SetUndefined();
 }

@@ -7,13 +7,24 @@ using namespace v8;
 
 void InitAll(Handle<Object> exports)
 {
+	Isolate *isolate = exports->GetIsolate();
+
 	// Export constants
-	exports->Set(String::NewSymbol("VERTEX_SHADER"), Int32::New(kGlslOptShaderVertex), ReadOnly);
-	exports->Set(String::NewSymbol("FRAGMENT_SHADER"), Int32::New(kGlslOptShaderFragment), ReadOnly);
-	exports->Set(String::NewSymbol("TARGET_OPENGL"), Int32::New(kGlslTargetOpenGL), ReadOnly);
-	exports->Set(String::NewSymbol("TARGET_OPENGLES20"), Int32::New(kGlslTargetOpenGLES20), ReadOnly);
-	exports->Set(String::NewSymbol("TARGET_OPENGLES30"), Int32::New(kGlslTargetOpenGLES30), ReadOnly);
-	
+	exports->Set(Symbol::New(isolate, String::NewFromUtf8(isolate, "VERTEX_SHADER")),
+																		Int32::New(isolate, kGlslOptShaderVertex));
+
+	exports->Set(Symbol::New(isolate, String::NewFromUtf8(isolate, "FRAGMENT_SHADER")),
+																		Int32::New(isolate, kGlslOptShaderFragment));
+
+	exports->Set(Symbol::New(isolate, String::NewFromUtf8(isolate, "TARGET_OPENGL")),
+																		Int32::New(isolate, kGlslTargetOpenGL));
+
+	exports->Set(Symbol::New(isolate, String::NewFromUtf8(isolate, "TARGET_OPENGLES20")),
+																		Int32::New(isolate, kGlslTargetOpenGLES20));
+
+	exports->Set(Symbol::New(isolate, String::NewFromUtf8(isolate, "TARGET_OPENGLES30")),
+																		Int32::New(isolate, kGlslTargetOpenGLES30));
+
 	// Export classes
 	Compiler::Init(exports);
 	Shader::Init(exports);

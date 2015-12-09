@@ -66,117 +66,131 @@ const char* Shader::getLog() const
 
 void Shader::Init(Handle<Object> exports)
 {
-	NanScope();
+	Isolate *isolate = exports->GetIsolate();
 
 	// Prepare constructor template
-	Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
-	tpl->SetClassName(NanNew<String>("Shader"));
+	Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
+	tpl->SetClassName(String::NewFromUtf8(isolate, "Shader"));
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
 	// Prototype
-	NanSetPrototypeTemplate(tpl, "dispose", NanNew<FunctionTemplate>(Dispose));
-	NanSetPrototypeTemplate(tpl, "compiled", NanNew<FunctionTemplate>(Compiled));
-	NanSetPrototypeTemplate(tpl, "output", NanNew<FunctionTemplate>(Output));
-	NanSetPrototypeTemplate(tpl, "rawOutput", NanNew<FunctionTemplate>(RawOutput));
-	NanSetPrototypeTemplate(tpl, "log", NanNew<FunctionTemplate>(Log));
+	NODE_SET_PROTOTYPE_METHOD(tpl, "dispose", Dispose);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "compiled", Compiled);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "output", Output);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "rawOutput", RawOutput);
+	NODE_SET_PROTOTYPE_METHOD(tpl, "log", Log);
 
 	// Export the class
-	NanAssignPersistent<Function>(constructor, tpl->GetFunction());
-	exports->Set(NanNew<String>("Shader"), tpl->GetFunction());
+	constructor.Reset(isolate, tpl->GetFunction());
+	exports->Set(String::NewFromUtf8(isolate, "Shader"), tpl->GetFunction());
 }
 
 //----------------------------------------------------------------------
 
-Handle<Value> Shader::New(const Arguments& args)
+void Shader::New(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
+	Isolate *isolate = args.GetIsolate();
 
-	if (args.Length() == 3)
+	// Checking arguments
+	if(args.Length() != 3)
 	{
-		// Check the first parameter (compiler)
-		Local<Value> args0 = args[0];
+	  isolate->ThrowException(Exception::TypeError(
+	    String::NewFromUtf8(isolate, "Need three arguments")));
 
-		if (args0->IsObject())
-		{
-			// Check the second parameter (shader type)
-			Local<Value> args1 = args[1];
-
-			if (args1->IsInt32())
-			{
-				// Check the third parameter (source code)
-				Local<Value> args2 = args[2];
-
-				if (args2->IsString())
-				{
-					Compiler* compiler = ObjectWrap::Unwrap<Compiler>(args0->ToObject());
-					int type = args1->Int32Value();
-					String::Utf8Value sourceCode(args2->ToString());
-	
-					Shader* obj = new Shader(compiler, type, *sourceCode);
-					obj->Wrap(args.This());
-
-					return args.This();
-				}
-			}
-		}
+	  return;
 	}
 
-	// Couldn't create the Shader
-	NanThrowError("Invalid arguments");
+	// Checking compiler
+	if(!args[0]->IsObject())
+	{
+		isolate->ThrowException(Exception::TypeError(
+	    String::NewFromUtf8(isolate, "The compiler is not a valid Object")));
+
+		return;
+	}
+
+	// Checking shader type
+	if (!args[1]->IsInt32())
+	{
+		isolate->ThrowException(Exception::TypeError(
+	    String::NewFromUtf8(isolate, "The shader type is not a valid Integer")));
+
+		return;
+	}
+
+	// Checking the shader source code
+	if (args[2]->IsString())
+	{
+		isolate->ThrowException(Exception::TypeError(
+	    String::NewFromUtf8(isolate, "The source code is not a valid String")));
+
+		return;
+	}
+
+	Compiler* compiler = ObjectWrap::Unwrap<Compiler>(args[0]->ToObject());
+	int type = args[1]->Int32Value();
+	String::Utf8Value sourceCode(args[2]->ToString());
+
+	Shader* obj = new Shader(compiler, type, *sourceCode);
+
+	obj->Wrap(args.This());
+
+	const int argc = 1;
+	Local<Value> argv[argc] = { args[0] };
+	Local<Function> cons = Local<Function>::New(isolate, constructor);
+	args.GetReturnValue().Set(cons->NewInstance(argc, argv));
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Shader::Dispose)
+void Shader::Dispose(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
-
 	Shader* obj = ObjectWrap::Unwrap<Shader>(args.This());
 	obj->release();
 
-	NanReturnUndefined();
+	args.GetReturnValue().SetUndefined();
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Shader::Compiled)
+void Shader::Compiled(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
+	Isolate *isolate = args.GetIsolate();
 
 	Shader* obj = ObjectWrap::Unwrap<Shader>(args.This());
 
-	NanReturnValue(NanNew<Boolean>(obj->isCompiled()));
+	args.GetReturnValue().Set(Boolean::New(isolate, obj->isCompiled()));
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Shader::Output)
+void Shader::Output(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
+	Isolate *isolate = args.GetIsolate();
 
 	Shader* obj = ObjectWrap::Unwrap<Shader>(args.This());
 
-	NanReturnValue(NanNew<String>(obj->getOutput()));
+	args.GetReturnValue().Set(String::NewFromUtf8(isolate, obj->getOutput()));
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Shader::RawOutput)
+void Shader::RawOutput(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
+	Isolate *isolate = args.GetIsolate();
 
 	Shader* obj = ObjectWrap::Unwrap<Shader>(args.This());
 
-	NanReturnValue(NanNew<String>(obj->getRawOutput()));
+	args.GetReturnValue().Set(String::NewFromUtf8(isolate, obj->getRawOutput()));
 }
 
 //----------------------------------------------------------------------
 
-NAN_METHOD(Shader::Log)
+void Shader::Log(const FunctionCallbackInfo<Value>& args)
 {
-	NanScope();
+	Isolate *isolate = args.GetIsolate();
 
 	Shader* obj = ObjectWrap::Unwrap<Shader>(args.This());
 
-	NanReturnValue(NanNew<String>(obj->getLog()));
+	args.GetReturnValue().Set(String::NewFromUtf8(isolate, obj->getLog()));
 }

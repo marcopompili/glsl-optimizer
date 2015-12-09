@@ -19,8 +19,9 @@ private:
 
 	glslopt_ctx* _binding;
 
-	static NAN_METHOD(New);
-	static NAN_METHOD(Dispose);
+	static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Dispose(const v8::FunctionCallbackInfo<v8::Value>& args);
+
 	static v8::Persistent<v8::Function> constructor;
 };
 

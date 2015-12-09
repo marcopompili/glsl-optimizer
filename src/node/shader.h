@@ -24,13 +24,14 @@ private:
 	glslopt_shader* _binding;
 	bool _compiled;
 
-	static NAN_METHOD(New);
-	static NAN_METHOD(Dispose);
+	static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Dispose(const v8::FunctionCallbackInfo<v8::Value>& args);
 
-	static NAN_METHOD(Compiled);
-	static NAN_METHOD(Output);
-	static NAN_METHOD(RawOutput);
-	static NAN_METHOD(Log);
+	static void Compiled(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Output(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void RawOutput(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Log(const v8::FunctionCallbackInfo<v8::Value>& args);
+
 	static v8::Persistent<v8::Function> constructor;
 };
 
